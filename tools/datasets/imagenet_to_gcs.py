@@ -50,6 +50,7 @@ import os
 import random
 import tarfile
 import urllib
+from urllib import urlretrieve
 
 from absl import app
 from absl import flags
@@ -99,7 +100,7 @@ def download_dataset(raw_data_dir):
   """Download the Imagenet dataset into the temporary directory."""
   def _download(url, filename):
     """Download the dataset at the provided filepath."""
-    urllib.urlretrieve(url, filename)
+    urlretrieve(url, filename)
 
   def _get_members(filename):
     """Get all members of a tarfile."""
@@ -279,7 +280,7 @@ def _process_image(filename, coder):
     width: integer, image width in pixels.
   """
   # Read the image file.
-  with tf.gfile.FastGFile(filename, 'r') as f:
+  with tf.gfile.FastGFile(filename, 'rb') as f:
     image_data = f.read()
 
   # Clean the dirty data.
@@ -366,7 +367,7 @@ def convert_to_tf_records(raw_data_dir):
   # across the batches.
   random.seed(0)
   def make_shuffle_idx(n):
-    order = range(n)
+    order = list(range(n))
     random.shuffle(order)
     return order
 
