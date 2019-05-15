@@ -349,12 +349,16 @@ def _process_dataset(filenames, synsets, labels, output_directory, prefix,
   files = []
 
   for shard in range(num_shards):
-    chunk_files = filenames[shard * chunksize : (shard + 1) * chunksize]
-    chunk_synsets = synsets[shard * chunksize : (shard + 1) * chunksize]
     output_file = os.path.join(
         output_directory, '%s-%.5d-of-%.5d' % (prefix, shard, num_shards))
-    _process_image_files_batch(coder, output_file, chunk_files,
-                               chunk_synsets, labels)
+    file_ = Path(output_file)
+    if !file_.exists():
+	chunk_files = filenames[shard * chunksize : (shard + 1) * chunksize]
+        chunk_synsets = synsets[shard * chunksize : (shard + 1) * chunksize]
+        _process_image_files_batch(coder, output_file, chunk_files,
+                                   chunk_synsets, labels)
+    else:
+        print(output_file, " already exists")
     tf.logging.info('Finished writing file: %s' % output_file)
     files.append(output_file)
   return files

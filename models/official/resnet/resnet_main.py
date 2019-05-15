@@ -227,6 +227,14 @@ flags.DEFINE_multi_integer(
 MEAN_RGB = [0.485 * 255, 0.456 * 255, 0.406 * 255]
 STDDEV_RGB = [0.229 * 255, 0.224 * 255, 0.225 * 255]
 
+# TODO
+def normal_histogram(var, name):
+  tf.summary.histogram(name+'-normal', var)
+def log_histogram(var, name):
+  var = tf.math.abs(var)
+  var = tf.maximum(var, 1.4e-30)
+  var = tf.math.log(var)/tf.math.log(tf.constant(2.0))
+  tf.summary.histogram(name+'-logarithm', var)
 
 def get_lr_schedule(train_steps, num_train_images, train_batch_size):
   """learning rate schedule."""
@@ -490,6 +498,20 @@ def resnet_model_fn(features, labels, mode, params):
       }
 
     eval_metrics = (metric_fn, [labels, logits])
+    # TODO
+    activations = tf.get_collection('activations')
+    for activ in activations:
+      normal_histogram(activ, activ.name + '-act')
+      log_histogram(activ, activ.name + '-act')
+      normal_histogram(tf.gradients(loss, activ), activ.name + '-grad')
+      log_histogram(tf.gradients(loss, activ), activ.name + '-grad')
+    for trainable_var in tf.trainable_variables():
+      normal_histogram(trainable_var, trainable_var.name + '-act')
+      log_histogram(trainable_var, trainable_var.name + '-act')
+      normal_histogram(tf.gradients(loss, trainable_var),
+                       trainable_var.name + '-grad')
+      log_histogram(tf.gradients(loss, trainable_var),
+                    trainable_var.name + '-grad')
 
   return tf.contrib.tpu.TPUEstimatorSpec(
       mode=mode,

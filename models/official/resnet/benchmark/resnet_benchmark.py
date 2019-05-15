@@ -58,6 +58,14 @@ flags.DEFINE_bool(
 NUM_TRAIN_IMAGES = 1281167
 NUM_EVAL_IMAGES = 50000
 
+# TODO
+def normal_histogram(var, name):
+  tf.summary.histogram(name+'-normal', var)
+def log_histogram(var, name):
+  var = tf.math.abs(var)
+  var = tf.maximum(var, 1.4e-30)
+  var = tf.math.log(var)/tf.math.log(tf.constant(2.0))
+  tf.summary.histogram(name+'-logarithm', var)
 
 def main(unused_argv):
   tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
