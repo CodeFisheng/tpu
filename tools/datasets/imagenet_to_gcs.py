@@ -47,6 +47,7 @@ the format:
 
 import math
 import os
+from pathlib import Path
 import random
 import tarfile
 import urllib
@@ -352,7 +353,7 @@ def _process_dataset(filenames, synsets, labels, output_directory, prefix,
     output_file = os.path.join(
         output_directory, '%s-%.5d-of-%.5d' % (prefix, shard, num_shards))
     file_ = Path(output_file)
-    if !file_.exists():
+    if file_.exists()==False:
 	chunk_files = filenames[shard * chunksize : (shard + 1) * chunksize]
         chunk_synsets = synsets[shard * chunksize : (shard + 1) * chunksize]
         _process_image_files_batch(coder, output_file, chunk_files,
