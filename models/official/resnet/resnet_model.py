@@ -285,7 +285,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
     The output `Tensor` of the block.
   """
   shortcut = inputs
-  tf.add_to_collection('activation', shortcut)
+  # tf.add_to_collection('activation', shortcut)
   if use_projection:
     # Projection shortcut only in first block within a group. Bottleneck blocks
     # end with 4 times the number of filters.
@@ -300,7 +300,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
   shortcut = dropblock(
       shortcut, is_training=is_training, data_format=data_format,
       keep_prob=dropblock_keep_prob, dropblock_size=dropblock_size)
-  tf.add_to_collection('activation', shortcut)
+  # tf.add_to_collection('activation', shortcut)
 
   inputs = conv2d_fixed_padding(
       inputs=inputs, filters=filters, kernel_size=1, strides=1,
@@ -311,7 +311,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
   inputs = dropblock(
       inputs, is_training=is_training, data_format=data_format,
       keep_prob=dropblock_keep_prob, dropblock_size=dropblock_size)
-  tf.add_to_collection('activation', inputs)
+  # tf.add_to_collection('activation', inputs)
 
   inputs = conv2d_fixed_padding(
       inputs=inputs, filters=filters, kernel_size=3, strides=strides,
@@ -322,7 +322,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
   inputs = dropblock(
       inputs, is_training=is_training, data_format=data_format,
       keep_prob=dropblock_keep_prob, dropblock_size=dropblock_size)
-  tf.add_to_collection('activation', inputs)
+  # tf.add_to_collection('activation', inputs)
 
   inputs = conv2d_fixed_padding(
       inputs=inputs, filters=4 * filters, kernel_size=1, strides=1,
@@ -334,7 +334,7 @@ def bottleneck_block(inputs, filters, is_training, strides,
   inputs = dropblock(
       inputs, is_training=is_training, data_format=data_format,
       keep_prob=dropblock_keep_prob, dropblock_size=dropblock_size)
-  tf.add_to_collection('activation', inputs)
+  # tf.add_to_collection('activation', inputs)
 
   return tf.nn.relu(inputs + shortcut)
 
@@ -368,14 +368,14 @@ def block_group(inputs, filters, block_fn, blocks, strides, is_training, name,
                     use_projection=True, data_format=data_format,
                     dropblock_keep_prob=dropblock_keep_prob,
                     dropblock_size=dropblock_size)
-  tf.add_to_collection('activation', inputs)
+  # tf.add_to_collection('activation', inputs)
 
   for _ in range(1, blocks):
     inputs = block_fn(inputs, filters, is_training, 1,
                       data_format=data_format,
                       dropblock_keep_prob=dropblock_keep_prob,
                       dropblock_size=dropblock_size)
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
 
   return tf.identity(inputs, name)
 
@@ -414,11 +414,11 @@ def resnet_v1_generator(block_fn, layers, num_classes,
 
   def model(inputs, is_training):
     """Creation of the model graph."""
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     inputs = conv2d_fixed_padding(
         inputs=inputs, filters=64, kernel_size=7, strides=2,
         data_format=data_format)
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     inputs = tf.identity(inputs, 'initial_conv')
     tf.add_to_collection('activation', inputs)
     inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
@@ -427,9 +427,9 @@ def resnet_v1_generator(block_fn, layers, num_classes,
     inputs = tf.layers.max_pooling2d(
         inputs=inputs, pool_size=3, strides=2, padding='SAME',
         data_format=data_format)
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     inputs = tf.identity(inputs, 'initial_max_pool')
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
 
     inputs = block_group(
         inputs=inputs, filters=64, block_fn=block_fn, blocks=layers[0],
@@ -458,18 +458,18 @@ def resnet_v1_generator(block_fn, layers, num_classes,
     inputs = tf.layers.average_pooling2d(
         inputs=inputs, pool_size=pool_size, strides=1, padding='VALID',
         data_format=data_format)
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     inputs = tf.identity(inputs, 'final_avg_pool')
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     inputs = tf.reshape(
         inputs, [-1, 2048 if block_fn is bottleneck_block else 512])
     inputs = tf.layers.dense(
         inputs=inputs,
         units=num_classes,
         kernel_initializer=tf.random_normal_initializer(stddev=.01))
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     inputs = tf.identity(inputs, 'final_dense')
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
     return inputs
 
   model.default_image_size = 224
