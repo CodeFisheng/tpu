@@ -449,6 +449,23 @@ def resnet_model_fn(features, labels, mode, params):
             summary.scalar('learning_rate', lr[0], step=gs)
             summary.scalar('current_epoch', ce[0], step=gs)
 
+            # TODO record distribution every 1251 steps (steps per epoch)
+            # with summary.record_summaries_every_n_global_steps(FLAGS.steps_per_eval):
+            activations = tf.get_collection('activations')
+            print(activations)
+            for activ in activations:
+                normal_histogram(activ, activ.name + '-act')
+                log_histogram(activ, activ.name + '-act')
+                normal_histogram(tf.gradients(loss, activ), activ.name + '-grad')
+                log_histogram(tf.gradients(loss, activ), activ.name + '-grad')
+            for trainable_var in tf.trainable_variables():
+                normal_histogram(trainable_var, trainable_var.name + '-act')
+                log_histogram(trainable_var, trainable_var.name + '-act')
+                normal_histogram(tf.gradients(loss, trainable_var),
+                                 trainable_var.name + '-grad')
+                log_histogram(tf.gradients(loss, trainable_var),
+                              trainable_var.name + '-grad')
+
             return summary.all_summary_ops()
 
       # To log the loss, current learning rate, and epoch for Tensorboard, the
@@ -498,20 +515,6 @@ def resnet_model_fn(features, labels, mode, params):
       }
 
     eval_metrics = (metric_fn, [labels, logits])
-    # TODO
-    activations = tf.get_collection('activations')
-    for activ in activations:
-      normal_histogram(activ, activ.name + '-act')
-      log_histogram(activ, activ.name + '-act')
-      normal_histogram(tf.gradients(loss, activ), activ.name + '-grad')
-      log_histogram(tf.gradients(loss, activ), activ.name + '-grad')
-    for trainable_var in tf.trainable_variables():
-      normal_histogram(trainable_var, trainable_var.name + '-act')
-      log_histogram(trainable_var, trainable_var.name + '-act')
-      normal_histogram(tf.gradients(loss, trainable_var),
-                       trainable_var.name + '-grad')
-      log_histogram(tf.gradients(loss, trainable_var),
-                    trainable_var.name + '-grad')
 
   return tf.contrib.tpu.TPUEstimatorSpec(
       mode=mode,
