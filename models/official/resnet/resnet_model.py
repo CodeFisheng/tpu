@@ -294,8 +294,10 @@ def bottleneck_block(inputs, filters, is_training, strides,
         inputs=inputs, filters=filters_out, kernel_size=1, strides=strides,
         data_format=data_format)
     # tf.add_to_collection('activation', shortcut)
+    tf.add_to_collection('BatchNormInput', inputs)
     shortcut = batch_norm_relu(shortcut, is_training, relu=False,
                                data_format=data_format)
+    tf.add_to_collection('BatchNormOutput', inputs)
     # tf.add_to_collection('activation', shortcut)
   shortcut = dropblock(
       shortcut, is_training=is_training, data_format=data_format,
@@ -306,7 +308,9 @@ def bottleneck_block(inputs, filters, is_training, strides,
       inputs=inputs, filters=filters, kernel_size=1, strides=1,
       data_format=data_format)
   # tf.add_to_collection('activation', inputs)
+  tf.add_to_collection('BatchNormInput', inputs)
   inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
+  tf.add_to_collection('BatchNormOutput', inputs)
   # tf.add_to_collection('activation', inputs)
   inputs = dropblock(
       inputs, is_training=is_training, data_format=data_format,
@@ -317,7 +321,9 @@ def bottleneck_block(inputs, filters, is_training, strides,
       inputs=inputs, filters=filters, kernel_size=3, strides=strides,
       data_format=data_format)
   # tf.add_to_collection('activation', inputs)
+  tf.add_to_collection('BatchNormInput', inputs)
   inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
+  tf.add_to_collection('BatchNormOutput', inputs)
   # tf.add_to_collection('activation', inputs)
   inputs = dropblock(
       inputs, is_training=is_training, data_format=data_format,
@@ -328,8 +334,10 @@ def bottleneck_block(inputs, filters, is_training, strides,
       inputs=inputs, filters=4 * filters, kernel_size=1, strides=1,
       data_format=data_format)
   # tf.add_to_collection('activation', inputs)
+  tf.add_to_collection('BatchNormInput', inputs)
   inputs = batch_norm_relu(inputs, is_training, relu=False, init_zero=True,
                            data_format=data_format)
+  tf.add_to_collection('BatchNormOutput', inputs)
   # tf.add_to_collection('activation', inputs)
   inputs = dropblock(
       inputs, is_training=is_training, data_format=data_format,
@@ -414,15 +422,17 @@ def resnet_v1_generator(block_fn, layers, num_classes,
 
   def model(inputs, is_training):
     """Creation of the model graph."""
-    tf.add_to_collection('activation', inputs)
+    # tf.add_to_collection('activation', inputs)
+    print('')
+    print(inputs.dtype)
     inputs = conv2d_fixed_padding(
         inputs=inputs, filters=64, kernel_size=7, strides=2,
         data_format=data_format)
     # tf.add_to_collection('activation', inputs)
     inputs = tf.identity(inputs, 'initial_conv')
-    # tf.add_to_collection('activation', inputs)
+    tf.add_to_collection('BatchNormInput', inputs)
     inputs = batch_norm_relu(inputs, is_training, data_format=data_format)
-    # tf.add_to_collection('activation', inputs)
+    tf.add_to_collection('BatchNormOutput', inputs)
 
     inputs = tf.layers.max_pooling2d(
         inputs=inputs, pool_size=3, strides=2, padding='SAME',

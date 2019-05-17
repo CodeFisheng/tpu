@@ -415,7 +415,7 @@ def resnet_model_fn(features, labels, mode, params):
       train_op = optimizer.minimize(loss, global_step)
 
     if not params['skip_host_call']:
-      def host_call_fn(gs, loss, lr, ce):
+      def host_call_fn(gs, loss, lr, ce, bi_list, bo_list, big_list, bog_list):
         """Training host call. Creates scalar summaries for training metrics.
 
         This function is executed on the CPU and should not directly reference
@@ -449,24 +449,29 @@ def resnet_model_fn(features, labels, mode, params):
             summary.scalar('learning_rate', lr[0], step=gs)
             summary.scalar('current_epoch', ce[0], step=gs)
 
-            # TODO record distribution every 1251 steps (steps per epoch)
-            # with summary.record_summaries_every_n_global_steps(FLAGS.steps_per_eval):
-            activations = tf.get_collection('activations')
-            print(activations)
-            for activ in activations:
-                normal_histogram(activ, activ.name + '-act')
-                log_histogram(activ, activ.name + '-act')
-                normal_histogram(tf.gradients(loss, activ), activ.name + '-grad')
-                log_histogram(tf.gradients(loss, activ), activ.name + '-grad')
-            for trainable_var in tf.trainable_variables():
-                normal_histogram(trainable_var, trainable_var.name + '-act')
-                log_histogram(trainable_var, trainable_var.name + '-act')
-                normal_histogram(tf.gradients(loss, trainable_var),
-                                 trainable_var.name + '-grad')
-                log_histogram(tf.gradients(loss, trainable_var),
-                              trainable_var.name + '-grad')
-
-            return summary.all_summary_ops()
+        # TODO record distribution every 1251 steps (steps per epoch)
+        with summary.record_summaries_every_n_global_steps(FLAGS.steps_per_eval):
+          index = 0
+          for activ in bi_list:
+            normal_histogram(activ, 'bn-input-'+str(index))
+            log_histogram(activ, 'bn-input-'+str(index))
+            index = index + 1
+          index = 0
+          for activ in bo_list:
+            normal_histogram(activ, 'bn-output-'+str(index))
+            log_histogram(activ, 'bn-output-'+str(index))
+            index = index + 1
+          index = 0
+          for activ in big_list:
+            normal_histogram(activ, 'bn-input-grad-'+str(index))
+            log_histogram(activ, 'bn-input-grad-'+str(index))
+            index = index + 1
+          index = 0
+          for activ in bog_list:
+            normal_histogram(activ, 'bn-output-grad-'+str(index))
+            log_histogram(activ, 'bn-output-grad-'+str(index))
+            index = index + 1
+        return summary.all_summary_ops()
 
       # To log the loss, current learning rate, and epoch for Tensorboard, the
       # summary op needs to be run on the host CPU via host_call. host_call
@@ -477,8 +482,27 @@ def resnet_model_fn(features, labels, mode, params):
       loss_t = tf.reshape(loss, [1])
       lr_t = tf.reshape(learning_rate, [1])
       ce_t = tf.reshape(current_epoch, [1])
+      bn_inputs = tf.get_collection('BatchNormInput')
+      bn_outputs = tf.get_collection('BatchNormOutput')
+      bn_inputs_list = []
+      bn_outputs_list = []
+      bn_inputs_grad_list = []
+      bn_outputs_grad_list = []
+      for act in bn_inputs:
+        grad = tf.gradients(loss, act)
+        act = tf.reshape(act, [-1])
+        grad = tf.reshape(grad, [-1])
+        bn_inputs_list.append(act)
+        bn_inputs_grad_list.append(grad)
+      for act in bn_outputs:
+        grad = tf.gradients(loss, act)
+        act = tf.reshape(act, [-1])
+        grad = tf.reshape(grad, [-1])
+        bn_outputs_list.append(act)
+        bn_outputs_grad_list.append(grad)
 
-      host_call = (host_call_fn, [gs_t, loss_t, lr_t, ce_t])
+      host_call = (host_call_fn, [gs_t, loss_t, lr_t, ce_t, bn_inputs_list,
+                                  bn_outputs_list, bn_inputs_grad_list, bn_outputs_grad_list])
 
   else:
     train_op = None
