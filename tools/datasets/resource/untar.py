@@ -31,5 +31,5 @@ for filename in tarfiles:
     print(subdirectory)
     print(sub_tarfile)
     _untar_file(sub_tarfile, subdirectory)
-    #os.remove(sub_tarfile)
+    os.remove(sub_tarfile)
 
