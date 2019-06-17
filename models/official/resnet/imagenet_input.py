@@ -278,7 +278,7 @@ class ImageNetInput(ImageNetTFExampleInput):
     # Shuffle the filenames to ensure better randomization.
     if not self.dataset_split:
       file_pattern = os.path.join(
-          self.data_dir, 'train-*' if self.is_training else 'validation-*')
+          self.data_dir, 'train/train-*' if self.is_training else 'validation/validation-*')
     else:
       if self.dataset_split not in ['train', 'validation']:
         raise ValueError(
